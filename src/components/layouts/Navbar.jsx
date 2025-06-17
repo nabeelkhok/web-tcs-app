@@ -1,19 +1,70 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { 
+  FiHome, FiInfo, FiMail, FiTruck, FiUser, 
+  FiLogIn, FiLogOut, FiUserPlus, FiMenu, FiX 
+} from 'react-icons/fi';
+import { auth } from '../../../config/firebaseconfig'; // Make sure to import your Firebase auth
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        // Close mobile menu when route changes
+        setIsMobileMenuOpen(false);
+        
+        // Set up Firebase auth state listener
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setIsAuthenticated(!!user);
+            if (user) {
+                setUserEmail(user.email);
+                localStorage.setItem("user_idToken", user.uid);
+            } else {
+                setUserEmail('');
+                localStorage.removeItem("user_idToken");
+            }
+        });
+        
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        // Close mobile menu on route change
+        setIsMobileMenuOpen(false);
+    }, [location]);
 
     const toggleMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate("/auth/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    };
+
+    // Common styles
+    const linkStyles = "px-3 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center";
+    const activeStyles = "bg-gray-800 text-yellow-400";
+    const hoverStyles = "hover:bg-gray-800 hover:text-yellow-400";
+    const authButtonStyles = "px-3 py-2 rounded-md text-sm font-medium text-white transition duration-300";
+
     return (
-        <nav className="bg-gray-900 text-white p-4 fixed w-full top-0 shadow-lg z-10 border-b border-gray-700">
+        <nav className="bg-gray-900 text-white p-4 fixed w-full top-0 shadow-lg z-50 border-b border-gray-700">
             <div className="container mx-auto flex justify-between items-center">
+                {/* Logo/Brand */}
                 <NavLink 
                     to="/" 
                     className="text-3xl font-bold hover:text-yellow-400 transition duration-300 flex items-center"
+                    aria-label="Home"
                 >
                     <span className="text-yellow-400">T</span>
                     <span className="text-blue-400">C</span>
@@ -21,95 +72,170 @@ function Navbar() {
                     <span className="ml-2 text-sm font-normal text-gray-300 hidden sm:inline">| Courier Services</span>
                 </NavLink>
                 
-                <div className="hidden md:flex space-x-6">
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex space-x-4 items-center">
+                    {/* Main Navigation Links */}
                     <NavLink 
                         to="/" 
-                        className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-800 hover:text-yellow-400 transition duration-300 flex items-center"
-                        activeClassName="bg-gray-800 text-yellow-400"
+                        className={`${linkStyles} ${hoverStyles}`}
+                        activeclassname={activeStyles}
                         end
                     >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                        Home
+                        <FiHome className="mr-2" /> Home
                     </NavLink>
                     <NavLink 
                         to="/about" 
-                        className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-800 hover:text-yellow-400 transition duration-300 flex items-center"
-                        activeClassName="bg-gray-800 text-yellow-400"
+                        className={`${linkStyles} ${hoverStyles}`}
+                        activeclassname={activeStyles}
                     >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        About Us
+                        <FiInfo className="mr-2" /> About
                     </NavLink>
                     <NavLink 
                         to="/contact" 
-                        className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-800 hover:text-yellow-400 transition duration-300 flex items-center"
-                        activeClassName="bg-gray-800 text-yellow-400"
+                        className={`${linkStyles} ${hoverStyles}`}
+                        activeclassname={activeStyles}
                     >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Contact Us
+                        <FiMail className="mr-2" /> Contact
                     </NavLink>
                     <NavLink 
                         to="/tracking" 
-                        className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-800 hover:text-yellow-400 transition duration-300 flex items-center"
-                        activeClassName="bg-gray-800 text-yellow-400"
+                        className={`${linkStyles} ${hoverStyles}`}
+                        activeclassname={activeStyles}
                     >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        Track Order
+                        <FiTruck className="mr-2" /> Tracking
                     </NavLink>
+
+                    {/* Authentication Links */}
+                    {isAuthenticated ? (
+                        <div className="flex items-center space-x-4 ml-4">
+                            <div className="text-sm text-gray-300 hidden lg:block">
+                                Welcome, {userEmail?.split('@')[0] || 'User'}
+                            </div>
+                            <NavLink 
+                                to="/dashboard" 
+                                className={`${linkStyles} ${hoverStyles}`}
+                                activeclassname={activeStyles}
+                            >
+                                <FiUser className="mr-2" /> Dashboard
+                            </NavLink>
+                            <button 
+                                onClick={handleLogout}
+                                className={`${authButtonStyles} bg-red-600 hover:bg-red-700 flex items-center`}
+                                aria-label="Logout"
+                            >
+                                <FiLogOut className="mr-2" /> Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex space-x-2 ml-4">
+                            <NavLink 
+                                to="/auth/login" 
+                                className={`${authButtonStyles} bg-blue-600 hover:bg-blue-700 flex items-center`}
+                            >
+                                <FiLogIn className="mr-2" /> Login
+                            </NavLink>
+                            <NavLink 
+                                to="/auth/signup" 
+                                className={`${authButtonStyles} bg-green-600 hover:bg-green-700 flex items-center`}
+                            >
+                                <FiUserPlus className="mr-2" /> Sign Up
+                            </NavLink>
+                        </div>
+                    )}
                 </div>
                 
+                {/* Mobile Menu Button */}
                 <button 
-                    className="md:hidden text-gray-300 hover:text-white focus:outline-none text-2xl transition duration-300" 
+                    className="md:hidden text-gray-300 hover:text-white focus:outline-none text-2xl transition duration-300 p-2" 
                     onClick={toggleMenu}
                     aria-label="Toggle menu"
+                    aria-expanded={isMobileMenuOpen}
                 >
-                    {isMobileMenuOpen ? '✕' : '☰'}
+                    {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                 </button>
             </div>
             
+            {/* Mobile Navigation */}
             <div 
-                className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden bg-gray-800 text-center py-2 space-y-1`}
+                className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden bg-gray-800 text-center transition-all duration-300 ease-in-out`}
             >
-                <NavLink 
-                    to="/" 
-                    className="block py-3 px-4 text-sm font-medium hover:bg-gray-700 hover:text-yellow-400 transition duration-300"
-                    activeClassName="bg-gray-700 text-yellow-400"
-                    onClick={toggleMenu}
-                    end
-                >
-                    Home
-                </NavLink>
-                <NavLink 
-                    to="/about" 
-                    className="block py-3 px-4 text-sm font-medium hover:bg-gray-700 hover:text-yellow-400 transition duration-300"
-                    activeClassName="bg-gray-700 text-yellow-400"
-                    onClick={toggleMenu}
-                >
-                    About Us
-                </NavLink>
-                <NavLink 
-                    to="/contact" 
-                    className="block py-3 px-4 text-sm font-medium hover:bg-gray-700 hover:text-yellow-400 transition duration-300"
-                    activeClassName="bg-gray-700 text-yellow-400"
-                    onClick={toggleMenu}
-                >
-                    Contact Us
-                </NavLink>
-                <NavLink 
-                    to="/tracking" 
-                    className="block py-3 px-4 text-sm font-medium hover:bg-gray-700 hover:text-yellow-400 transition duration-300"
-                    activeClassName="bg-gray-700 text-yellow-400"
-                    onClick={toggleMenu}
-                >
-                    Track Order
-                </NavLink>
+                <div className="py-2 space-y-1">
+                    {/* Mobile Navigation Links */}
+                    <NavLink 
+                        to="/" 
+                        className={`block py-3 px-4 text-sm font-medium ${hoverStyles}`}
+                        activeclassname={activeStyles}
+                        onClick={toggleMenu}
+                        end
+                    >
+                        <FiHome className="inline mr-2" /> Home
+                    </NavLink>
+                    <NavLink 
+                        to="/about" 
+                        className={`block py-3 px-4 text-sm font-medium ${hoverStyles}`}
+                        activeclassname={activeStyles}
+                        onClick={toggleMenu}
+                    >
+                        <FiInfo className="inline mr-2" /> About
+                    </NavLink>
+                    <NavLink 
+                        to="/contact" 
+                        className={`block py-3 px-4 text-sm font-medium ${hoverStyles}`}
+                        activeclassname={activeStyles}
+                        onClick={toggleMenu}
+                    >
+                        <FiMail className="inline mr-2" /> Contact
+                    </NavLink>
+                    <NavLink 
+                        to="/tracking" 
+                        className={`block py-3 px-4 text-sm font-medium ${hoverStyles}`}
+                        activeclassname={activeStyles}
+                        onClick={toggleMenu}
+                    >
+                        <FiTruck className="inline mr-2" /> Tracking
+                    </NavLink>
+
+                    {/* Mobile Authentication Links */}
+                    {isAuthenticated ? (
+                        <>
+                            <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-700">
+                                Logged in as: {userEmail}
+                            </div>
+                            <NavLink 
+                                to="/dashboard" 
+                                className={`block py-3 px-4 text-sm font-medium ${hoverStyles}`}
+                                activeclassname={activeStyles}
+                                onClick={toggleMenu}
+                            >
+                                <FiUser className="inline mr-2" /> Dashboard
+                            </NavLink>
+                            <button 
+                                onClick={handleLogout}
+                                className={`w-full py-3 px-4 text-sm font-medium bg-red-600 hover:bg-red-700 text-white flex items-center justify-center`}
+                            >
+                                <FiLogOut className="inline mr-2" /> Logout
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="border-t border-gray-700"></div>
+                            <NavLink 
+                                to="/auth/login" 
+                                className={`block py-3 px-4 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center`}
+                                onClick={toggleMenu}
+                            >
+                                <FiLogIn className="inline mr-2" /> Login
+                            </NavLink>
+                            <NavLink 
+                                to="/auth/signup" 
+                                className={`block py-3 px-4 text-sm font-medium bg-green-600 hover:bg-green-700 text-white flex items-center justify-center`}
+                                onClick={toggleMenu}
+                            >
+                                <FiUserPlus className="inline mr-2" /> Sign Up
+                            </NavLink>
+                        </>
+                    )}
+                </div>
             </div>
         </nav>
     );
